@@ -401,7 +401,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 24px;
         }
 
@@ -410,6 +410,19 @@
             padding: 16px;
             border-radius: 12px;
             background: var(--bg);
+        }
+
+        .stat-item.highlight {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+        }
+
+        .stat-item.highlight h3 {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .stat-item.highlight .value {
+            color: white;
         }
 
         .stat-item h3 {
@@ -427,6 +440,7 @@
 
         .stat-item:nth-child(2) .value { color: var(--success); }
         .stat-item:nth-child(3) .value { color: var(--warning); }
+        .stat-item:nth-child(4) .value { color: var(--danger); }
         .stat-item:nth-child(4) .value { color: var(--text-muted); }
 
         /* Price Modal */
@@ -530,8 +544,12 @@
             }
 
             .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
                 gap: 12px;
+            }
+
+            .stat-item .value {
+                font-size: 1.3rem;
             }
 
             .stat-item .value {
@@ -848,8 +866,13 @@
                 </div>
             </div>
             <div class="quick-options">
-                <!-- Row 1: Date, Count -->
+                <!-- Row 1: Identity, Date, Count -->
                 <div class="option-row">
+                    <span class="row-label">身份</span>
+                    <div class="btn-group" id="identityGroup">
+                        <button class="opt-btn identity-btn active" data-value="teacher">教研员</button>
+                        <button class="opt-btn identity-btn" data-value="non-teacher">非教研员</button>
+                    </div>
                     <span class="row-label">日期</span>
                     <input type="date" id="date" class="form-input-compact">
                     <span class="row-label">课次</span>
@@ -952,20 +975,24 @@
     <section class="stats-section" id="stats">
         <div class="stats-grid">
             <div class="stat-item">
-                <h3>总课时费</h3>
+                <h3>基础课时费</h3>
                 <div class="value" id="totalFee">¥0</div>
-            </div>
-            <div class="stat-item">
-                <h3>总教研员计数</h3>
-                <div class="value" id="totalResearch">0</div>
             </div>
             <div class="stat-item">
                 <h3>总课次</h3>
                 <div class="value" id="totalClasses">0</div>
             </div>
             <div class="stat-item">
-                <h3>记录条数</h3>
-                <div class="value" id="recordCount">0</div>
+                <h3>课次系数</h3>
+                <div class="value" id="classCoefficient">1.0</div>
+            </div>
+            <div class="stat-item">
+                <h3>身份系数</h3>
+                <div class="value" id="identityCoefficient">1.5</div>
+            </div>
+            <div class="stat-item highlight">
+                <h3>实际课时费</h3>
+                <div class="value" id="actualFee">¥0</div>
             </div>
         </div>
     </section>
@@ -1019,7 +1046,22 @@
         let lastAddedId = null;
         let currentViewDate = new Date();
         let recordsPanelVisible = false;
-        let selectedTimeSlot = '', selectedGrade = '', selectedClassType = '';
+        let selectedTimeSlot = '', selectedGrade = '', selectedClassType = '', selectedIdentity = 'teacher';
+
+        // 课次系数表
+        const classCountCoefficients = [
+            { max: 50, coefficient: 1.0 },
+            { max: 60, coefficient: 1.05 },
+            { max: 80, coefficient: 1.1 },
+            { max: 100, coefficient: 1.15 },
+            { max: Infinity, coefficient: 1.2 }
+        ];
+
+        // 身份系数
+        const identityCoefficients = {
+            'teacher': 1.5,
+            'non-teacher': 1.0
+        };
 
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('date').valueAsDate = new Date();
@@ -1031,6 +1073,16 @@
         });
 
         function bindEvents() {
+            // Identity buttons
+            document.querySelectorAll('#identityGroup .identity-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#identityGroup .identity-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedIdentity = this.dataset.value;
+                    updateSummary();
+                });
+            });
+
             // Count buttons
             document.querySelectorAll('#countGroup .count-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -1272,12 +1324,28 @@
 
         function updateSummary() {
             const totalFee = filteredRecords.reduce((sum, r) => sum + r.totalFee, 0);
-            const totalResearch = filteredRecords.reduce((sum, r) => sum + r.researchCount, 0);
             const totalClasses = filteredRecords.reduce((sum, r) => sum + r.count, 0);
+
+            // 计算课次系数
+            let classCoefficient = 1.0;
+            for (const item of classCountCoefficients) {
+                if (totalClasses <= item.max) {
+                    classCoefficient = item.coefficient;
+                    break;
+                }
+            }
+
+            // 获取身份系数
+            const identityCoefficient = identityCoefficients[selectedIdentity] || 1.0;
+
+            // 计算实际课时费
+            const actualFee = Math.round(totalFee * classCoefficient * identityCoefficient);
+
             document.getElementById('totalFee').textContent = `¥${totalFee}`;
-            document.getElementById('totalResearch').textContent = totalResearch.toFixed(1);
-            document.getElementById('totalClasses').textContent = totalClasses;
-            document.getElementById('recordCount').textContent = filteredRecords.length;
+            document.getElementById('totalClasses').textContent = totalClasses.toFixed(2);
+            document.getElementById('classCoefficient').textContent = classCoefficient.toFixed(2);
+            document.getElementById('identityCoefficient').textContent = identityCoefficient.toFixed(1);
+            document.getElementById('actualFee').textContent = `¥${actualFee}`;
         }
 
         function exportData() {
