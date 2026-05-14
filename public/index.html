@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课时费统计系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .price-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff3838;
+        }
+
+        .btn-success {
+            background: #2ed573;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #26b965;
+        }
+
+        .btn-secondary {
+            background: #747d8c;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #57606f;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
+            white-space: nowrap;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .summary-card h3 {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .summary-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .summary-card.green {
+            background: linear-gradient(135deg, #2ed573 0%, #26b965 100%);
+        }
+
+        .summary-card.orange {
+            background: linear-gradient(135deg, #ffa502 0%, #ff7f00 100%);
+        }
+
+        .summary-card.blue {
+            background: linear-gradient(135deg, #3742fa 0%, #2f3542 100%);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .tag-one-on-one {
+            background: #ffe0e0;
+            color: #ff4757;
+        }
+
+        .tag-group-1 {
+            background: #e0f7ff;
+            color: #3742fa;
+        }
+
+        .tag-group-2 {
+            background: #e0ffe0;
+            color: #2ed573;
+        }
+
+        .tag-group-3 {
+            background: #fff0e0;
+            color: #ffa502;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .price-table th, .price-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .price-table th {
+            background: #667eea;
+            color: white;
+        }
+
+        .price-table td:first-child {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .date-filter label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .date-filter input {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #e0e0e0;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+
+            .summary-card .value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 课时费统计系统</h1>
+
+        <!-- 输入表单 -->
+        <div class="card">
+            <h2 class="card-title">📝 添加课程记录</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="date">日期</label>
+                    <input type="date" id="date">
+                </div>
+                <div class="form-group">
+                    <label for="timeSlot">时段</label>
+                    <select id="timeSlot">
+                        <option value="">请选择时段</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="grade">年级</label>
+                    <select id="grade">
+                        <option value="">请选择年级</option>
+                        <option value="6-8">6-8年级</option>
+                        <option value="初三/高一/高二">初三/高一/高二</option>
+                        <option value="高三">高三</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="classType">课时形式</label>
+                    <select id="classType">
+                        <option value="">请选择课时形式</option>
+                        <option value="one-on-one">一对一</option>
+                        <option value="group-1">一对三（1人）</option>
+                        <option value="group-2">一对三（2人）</option>
+                        <option value="group-3">一对三（3人）</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="price">单价（元/课时）</label>
+                    <div class="price-display" id="priceDisplay">选择年级和形式</div>
+                    <input type="hidden" id="price">
+                </div>
+                <div class="form-group">
+                    <label for="count">课次</label>
+                    <input type="number" id="count" placeholder="请输入课次" min="1" value="1">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="addRecord()">
+                <span>➕</span> 添加记录
+            </button>
+        </div>
+
+        <!-- 价格表 -->
+        <div class="card">
+            <h2 class="card-title">💰 价格表</h2>
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th>年级</th>
+                        <th>一对一</th>
+                        <th>一对三（1人）</th>
+                        <th>一对三（2人）</th>
+                        <th>一对三（3人）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>6-8年级</td>
+                        <td>¥160</td>
+                        <td>¥100</td>
+                        <td>¥160</td>
+                        <td>¥220</td>
+                    </tr>
+                    <tr>
+                        <td>初三/高一/高二</td>
+                        <td>¥200</td>
+                        <td>¥140</td>
+                        <td>¥200</td>
+                        <td>¥260</td>
+                    </tr>
+                    <tr>
+                        <td>高三</td>
+                        <td>¥220</td>
+                        <td>¥160</td>
+                        <td>¥220</td>
+                        <td>¥280</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 统计汇总 -->
+        <div class="card">
+            <h2 class="card-title">📊 统计汇总</h2>
+            <div class="date-filter">
+                <label>日期筛选：</label>
+                <input type="date" id="startDate" placeholder="开始日期">
+                <span>至</span>
+                <input type="date" id="endDate" placeholder="结束日期">
+                <button class="btn btn-secondary btn-small" onclick="filterByDate()">筛选</button>
+                <button class="btn btn-secondary btn-small" onclick="clearFilter()">清除</button>
+            </div>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h3>总课时费</h3>
+                    <div class="value" id="totalFee">¥0</div>
+                </div>
+                <div class="summary-card green">
+                    <h3>总教研员计数</h3>
+                    <div class="value" id="totalResearch">0</div>
+                </div>
+                <div class="summary-card orange">
+                    <h3>总课次</h3>
+                    <div class="value" id="totalClasses">0</div>
+                </div>
+                <div class="summary-card blue">
+                    <h3>记录条数</h3>
+                    <div class="value" id="recordCount">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 记录列表 -->
+        <div class="card">
+            <h2 class="card-title">
+                <span>📋 课程记录</span>
+            </h2>
+            <div class="actions" style="margin-bottom: 20px;">
+                <button class="btn btn-success btn-small" onclick="exportData()">
+                    <span>📥</span> 导出数据
+                </button>
+                <button class="btn btn-danger btn-small" onclick="clearAll()">
+                    <span>🗑️</span> 清空所有
+                </button>
+            </div>
+            <div class="table-container" id="tableContainer">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 配置
+        const classTypeConfig = {
+            'one-on-one': { name: '一对一', researchCount: 2.5, tagClass: 'tag-one-on-one' },
+            'group-1': { name: '一对三（1人）', researchCount: 1, tagClass: 'tag-group-1' },
+            'group-2': { name: '一对三（2人）', researchCount: 2, tagClass: 'tag-group-2' },
+            'group-3': { name: '一对三（3人）', researchCount: 3, tagClass: 'tag-group-3' }
+        };
+
+        let allRecords = [];
+        let filteredRecords = [];
+        let priceTable = {};
+        let timeSlots = [];
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置默认日期为今天
+            document.getElementById('date').valueAsDate = new Date();
+            loadData();
+        });
+
+        // 加载数据
+        async function loadData() {
+            try {
+                const response = await fetch('/api/data');
+                const data = await response.json();
+
+                timeSlots = data.timeSlots || [];
+                priceTable = data.priceTable || {};
+                allRecords = data.records || [];
+                filteredRecords = [...allRecords];
+
+                initTimeSlots();
+                updateDisplay();
+            } catch (e) {
+                console.error('加载数据失败:', e);
+                alert('加载数据失败，请确保服务器正在运行');
+            }
+        }
+
+        // 初始化时段选择
+        function initTimeSlots() {
+            const select = document.getElementById('timeSlot');
+            select.innerHTML = '<option value="">请选择时段</option>';
+            timeSlots.forEach(slot => {
+                select.innerHTML += `<option value="${slot}">${slot}</option>`;
+            });
+        }
+
+        // 根据年级和课时形式自动填充价格
+        document.getElementById('grade').addEventListener('change', updatePrice);
+        document.getElementById('classType').addEventListener('change', updatePrice);
+
+        function updatePrice() {
+            const grade = document.getElementById('grade').value;
+            const classType = document.getElementById('classType').value;
+            const display = document.getElementById('priceDisplay');
+            const priceInput = document.getElementById('price');
+
+            if (grade && classType && priceTable[grade]) {
+                const price = priceTable[grade][classType];
+                display.textContent = `¥${price}`;
+                priceInput.value = price;
+            } else {
+                display.textContent = '选择年级和形式';
+                priceInput.value = '';
+            }
+        }
+
+        // 添加记录
+        async function addRecord() {
+            const date = document.getElementById('date').value;
+            const timeSlot = document.getElementById('timeSlot').value;
+            const grade = document.getElementById('grade').value;
+            const classType = document.getElementById('classType').value;
+            const price = parseFloat(document.getElementById('price').value);
+            const count = parseInt(document.getElementById('count').value);
+
+            if (!date) {
+                alert('请选择日期！');
+                return;
+            }
+            if (!timeSlot) {
+                alert('请选择时段！');
+                return;
+            }
+            if (!grade) {
+                alert('请选择年级！');
+                return;
+            }
+            if (!classType) {
+                alert('请选择课时形式！');
+                return;
+            }
+            if (!price || price <= 0) {
+                alert('价格无效，请重新选择年级和课时形式！');
+                return;
+            }
+            if (!count || count <= 0) {
+                alert('请输入有效的课次！');
+                return;
+            }
+
+            const config = classTypeConfig[classType];
+            const record = {
+                date,
+                timeSlot,
+                grade,
+                classType: config.name,
+                classTypeKey: classType,
+                price,
+                count,
+                researchCount: config.researchCount * count,
+                totalFee: price * count
+            };
+
+            try {
+                const response = await fetch('/api/records', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(record)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    allRecords.push(result.record);
+                    filteredRecords = [...allRecords];
+                    updateDisplay();
+                    clearForm();
+                } else {
+                    alert('添加失败：' + result.error);
+                }
+            } catch (e) {
+                console.error('添加记录失败:', e);
+                alert('添加失败，请检查服务器连接');
+            }
+        }
+
+        // 清空表单
+        function clearForm() {
+            document.getElementById('date').valueAsDate = new Date();
+            document.getElementById('timeSlot').selectedIndex = 0;
+            document.getElementById('grade').selectedIndex = 0;
+            document.getElementById('classType').selectedIndex = 0;
+            document.getElementById('count').value = '1';
+            document.getElementById('priceDisplay').textContent = '选择年级和形式';
+            document.getElementById('price').value = '';
+        }
+
+        // 删除记录
+        async function deleteRecord(id) {
+            if (!confirm('确定要删除这条记录吗？')) return;
+
+            try {
+                const response = await fetch(`/api/records/${id}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (result.success) {
+                    allRecords = allRecords.filter(r => r.id !== id);
+                    filteredRecords = filteredRecords.filter(r => r.id !== id);
+                    updateDisplay();
+                } else {
+                    alert('删除失败：' + result.error);
+                }
+            } catch (e) {
+                console.error('删除记录失败:', e);
+                alert('删除失败，请检查服务器连接');
+            }
+        }
+
+        // 清空所有
+        async function clearAll() {
+            if (allRecords.length === 0) return;
+            if (!confirm('确定要清空所有记录吗？此操作不可恢复！')) return;
+
+            try {
+                const response = await fetch('/api/records', { method: 'DELETE' });
+                const result = await response.json();
+                if (result.success) {
+                    allRecords = [];
+                    filteredRecords = [];
+                    updateDisplay();
+                } else {
+                    alert('清空失败：' + result.error);
+                }
+            } catch (e) {
+                console.error('清空记录失败:', e);
+                alert('清空失败，请检查服务器连接');
+            }
+        }
+
+        // 日期筛选
+        function filterByDate() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate && !endDate) {
+                filteredRecords = [...allRecords];
+            } else {
+                filteredRecords = allRecords.filter(r => {
+                    const recordDate = r.date;
+                    if (startDate && recordDate < startDate) return false;
+                    if (endDate && recordDate > endDate) return false;
+                    return true;
+                });
+            }
+            updateDisplay();
+        }
+
+        function clearFilter() {
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            filteredRecords = [...allRecords];
+            updateDisplay();
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            updateTable();
+            updateSummary();
+        }
+
+        // 更新表格
+        function updateTable() {
+            const container = document.getElementById('tableContainer');
+
+            if (filteredRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <p>暂无记录，请添加课程记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 按日期排序（最新的在前）
+            const sortedRecords = [...filteredRecords].sort((a, b) => {
+                if (a.date !== b.date) return b.date.localeCompare(a.date);
+                return timeSlots.indexOf(a.timeSlot) - timeSlots.indexOf(b.timeSlot);
+            });
+
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>日期</th>
+                            <th>时段</th>
+                            <th>年级</th>
+                            <th>课时形式</th>
+                            <th>单价</th>
+                            <th>课次</th>
+                            <th>教研员计数</th>
+                            <th>课时费</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sortedRecords.map((record, index) => `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${record.date}</td>
+                                <td>${record.timeSlot}</td>
+                                <td>${record.grade}</td>
+                                <td><span class="tag ${classTypeConfig[record.classTypeKey].tagClass}">${record.classType}</span></td>
+                                <td>¥${record.price.toFixed(0)}</td>
+                                <td>${record.count}</td>
+                                <td>${record.researchCount}</td>
+                                <td>¥${record.totalFee.toFixed(0)}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-small" onclick="deleteRecord(${record.id})">删除</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // 更新汇总
+        function updateSummary() {
+            const totalFee = filteredRecords.reduce((sum, r) => sum + r.totalFee, 0);
+            const totalResearch = filteredRecords.reduce((sum, r) => sum + r.researchCount, 0);
+            const totalClasses = filteredRecords.reduce((sum, r) => sum + r.count, 0);
+
+            document.getElementById('totalFee').textContent = `¥${totalFee.toFixed(0)}`;
+            document.getElementById('totalResearch').textContent = totalResearch.toFixed(1);
+            document.getElementById('totalClasses').textContent = totalClasses;
+            document.getElementById('recordCount').textContent = filteredRecords.length;
+        }
+
+        // 导出数据
+        function exportData() {
+            if (filteredRecords.length === 0) {
+                alert('没有数据可导出！');
+                return;
+            }
+
+            const sortedRecords = [...filteredRecords].sort((a, b) => {
+                if (a.date !== b.date) return a.date.localeCompare(b.date);
+                return timeSlots.indexOf(a.timeSlot) - timeSlots.indexOf(b.timeSlot);
+            });
+
+            const headers = ['序号', '日期', '时段', '年级', '课时形式', '单价', '课次', '教研员计数', '课时费'];
+            const rows = sortedRecords.map((r, i) => [
+                i + 1,
+                r.date,
+                r.timeSlot,
+                r.grade,
+                r.classType,
+                r.price,
+                r.count,
+                r.researchCount,
+                r.totalFee
+            ]);
+
+            const totalFee = filteredRecords.reduce((sum, r) => sum + r.totalFee, 0);
+            const totalResearch = filteredRecords.reduce((sum, r) => sum + r.researchCount, 0);
+            const totalClasses = filteredRecords.reduce((sum, r) => sum + r.count, 0);
+            rows.push(['', '', '', '合计', '', '', totalClasses, totalResearch, totalFee]);
+
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.join(','))
+            ].join('\n');
+
+            const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `课时费统计_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课时费统计系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        /* Header */
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Main Layout */
+        .main-container {
+            padding: 24px 32px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .monthly-section {
+            width: 100%;
+        }
+
+        .monthly-card {
+            width: 100%;
+        }
+
+        .records-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .month-selector {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .month-display {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .form-section {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .form-input {
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background: var(--bg);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .price-display {
+            background: var(--primary);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        /* Option buttons */
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .option-btn {
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: var(--text);
+            text-align: left;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary-light);
+        }
+
+        .option-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        /* Right Content - Records */
+        .content {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .records-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            flex: 1;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 8px;
+        }
+
+        .filter-bar label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .filter-bar input {
+            padding: 8px 12px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            position: sticky;
+            top: 0;
+            background: var(--card-bg);
+            z-index: 1;
+        }
+
+        tr:hover {
+            background: var(--bg);
+        }
+
+        tr.new-row {
+            animation: highlight 1.5s ease;
+        }
+
+        @keyframes highlight {
+            0% { background-color: rgba(99, 102, 241, 0.15); }
+            100% { background-color: transparent; }
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tag-one-on-one {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .tag-group-1 {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .tag-group-2 {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .tag-group-3 {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .btn-text:hover {
+            background: #fee2e2;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* Stats Section - Bottom */
+        .stats-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin: 0 32px 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 16px;
+            border-radius: 12px;
+            background: var(--bg);
+        }
+
+        .stat-item h3 {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-item .value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .stat-item:nth-child(2) .value { color: var(--success); }
+        .stat-item:nth-child(3) .value { color: var(--warning); }
+        .stat-item:nth-child(4) .value { color: var(--text-muted); }
+
+        /* Price Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.2rem;
+            color: var(--text);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .price-table th, .price-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .price-table th {
+            background: var(--primary);
+            color: white;
+        }
+
+        .price-table td:first-child {
+            background: var(--bg);
+            font-weight: 600;
+        }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 16px 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .main-container {
+                padding: 16px 20px;
+            }
+
+            .stats-section {
+                margin: 0 20px 16px;
+                padding: 16px 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .stat-item .value {
+                font-size: 1.4rem;
+            }
+        }
+
+        /* Collapse Button */
+        .collapse-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .collapse-btn:hover {
+            background: var(--primary-light);
+        }
+
+        /* Quick Add Section */
+        .quick-add-section {
+            padding: 16px 32px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .quick-add-card {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .quick-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .quick-header .card-title {
+            margin: 0;
+            padding: 0;
+            border: none;
+            font-size: 1.1rem;
+        }
+
+        .quick-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .price-display-inline {
+            background: var(--primary);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .btn-compact {
+            padding: 8px 24px !important;
+            font-size: 0.95rem !important;
+        }
+
+        .quick-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .row-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            min-width: 40px;
+        }
+
+        .form-input-compact {
+            padding: 8px 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-input-compact:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .opt-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+
+        .opt-btn:hover {
+            border-color: var(--primary-light);
+        }
+
+        .opt-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .count-btn {
+            padding: 8px 14px;
+            min-width: 50px;
+        }
+
+        /* Records Panel - Collapsible */
+        .records-panel {
+            position: fixed;
+            top: 70px;
+            right: 0;
+            width: 500px;
+            height: calc(100vh - 70px);
+            background: var(--card-bg);
+            box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 99;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .records-panel.show {
+            transform: translateX(0);
+        }
+
+        .records-panel .records-card {
+            box-shadow: none;
+            padding: 0;
+        }
+
+        /* Monthly Table - Horizontal */
+        .monthly-table-container {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .monthly-table {
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        .monthly-table th, .monthly-table td {
+            padding: 6px 8px;
+            text-align: center;
+            border: 1px solid var(--border);
+            font-size: 0.75rem;
+            min-width: 45px;
+        }
+
+        .monthly-table th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .monthly-table td:first-child {
+            position: sticky;
+            left: 0;
+            background: var(--card-bg);
+            font-weight: 600;
+            z-index: 1;
+            min-width: 50px;
+        }
+
+        .monthly-table th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 3;
+        }
+
+        .monthly-table td {
+            background: var(--bg);
+        }
+
+        .monthly-table td.has-data {
+            background: white;
+            font-weight: 500;
+        }
+
+        .monthly-table td.weekend {
+            background: #fef3c7;
+        }
+
+        .monthly-table td.today {
+            background: #dbeafe;
+            font-weight: 600;
+        }
+
+        .monthly-table .total-col {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            right: 0;
+        }
+
+        .monthly-table .total-row td {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .monthly-table .total-row td:first-child {
+            background: var(--primary);
+        }
+
+        @media (max-width: 1200px) {
+            .records-panel {
+                width: 100%;
+            }
+
+            .quick-add-section {
+                padding: 12px 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .quick-add-section {
+                padding: 12px 16px;
+            }
+
+            .quick-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .option-row {
+                flex-wrap: wrap;
+            }
+
+            .btn-group {
+                gap: 4px;
+            }
+
+            .opt-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+
+            .count-btn {
+                padding: 6px 10px;
+                min-width: 45px;
+            }
+
+            .monthly-table th, .monthly-table td {
+                padding: 4px 4px;
+                font-size: 0.7rem;
+                min-width: 35px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <span>📚</span>
+            <span>课时费统计</span>
+        </div>
+        <nav class="nav-links">
+            <a onclick="showPriceModal()">价格表</a>
+            <a onclick="toggleRecords()">课程记录</a>
+            <a href="#stats">统计汇总</a>
+        </nav>
+        <button class="collapse-btn" onclick="toggleRecords()" title="展开/收起课程记录">
+            <span id="toggleIcon">📋</span>
+        </button>
+    </header>
+
+    <!-- Quick Add Section - Top -->
+    <section class="quick-add-section">
+        <div class="quick-add-card">
+            <div class="quick-header">
+                <h2 class="card-title">快速添加</h2>
+                <div class="quick-actions">
+                    <div class="price-display-inline" id="priceDisplay">¥--</div>
+                    <button class="btn btn-primary btn-compact" onclick="addRecord()">➕ 添加</button>
+                </div>
+            </div>
+            <div class="quick-options">
+                <!-- Row 1: Date, Count -->
+                <div class="option-row">
+                    <span class="row-label">日期</span>
+                    <input type="date" id="date" class="form-input-compact">
+                    <span class="row-label">课次</span>
+                    <div class="btn-group" id="countGroup">
+                        <button class="opt-btn count-btn" data-value="0.25">0.25</button>
+                        <button class="opt-btn count-btn" data-value="0.5">0.5</button>
+                        <button class="opt-btn count-btn" data-value="0.75">0.75</button>
+                        <button class="opt-btn count-btn active" data-value="1">1</button>
+                    </div>
+                    <input type="hidden" id="count" value="1">
+                </div>
+                <!-- Row 2: Time Slots -->
+                <div class="option-row">
+                    <span class="row-label">时段</span>
+                    <div class="btn-group" id="timeGroup">
+                        <button class="opt-btn" data-value="7:30-9:30">7:30</button>
+                        <button class="opt-btn" data-value="9:30-11:30">9:30</button>
+                        <button class="opt-btn" data-value="12:00-14:00">12:00</button>
+                        <button class="opt-btn" data-value="14:00-16:00">14:00</button>
+                        <button class="opt-btn" data-value="16:00-18:00">16:00</button>
+                        <button class="opt-btn" data-value="18:20-20:20">18:20</button>
+                        <button class="opt-btn" data-value="20:20-22:20">20:20</button>
+                    </div>
+                </div>
+                <!-- Row 3: Grade -->
+                <div class="option-row">
+                    <span class="row-label">年级</span>
+                    <div class="btn-group" id="gradeGroup">
+                        <button class="opt-btn" data-value="6-8">6-8年级</button>
+                        <button class="opt-btn" data-value="初三/高一/高二">初三/高一/高二</button>
+                        <button class="opt-btn" data-value="高三">高三</button>
+                    </div>
+                </div>
+                <!-- Row 4: Class Type -->
+                <div class="option-row">
+                    <span class="row-label">形式</span>
+                    <div class="btn-group" id="classTypeGroup">
+                        <button class="opt-btn" data-value="one-on-one">一对一</button>
+                        <button class="opt-btn" data-value="group-1">1v3(1人)</button>
+                        <button class="opt-btn" data-value="group-2">1v3(2人)</button>
+                        <button class="opt-btn" data-value="group-3">1v3(3人)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Monthly Overview - Full Width -->
+        <section class="monthly-section">
+            <div class="records-card monthly-card">
+                <div class="section-header">
+                    <h2 class="section-title">📅 月度总览</h2>
+                    <div class="month-selector">
+                        <button class="btn btn-secondary btn-small" onclick="prevMonth()">◀</button>
+                        <span id="currentMonth" class="month-display">2024年1月</span>
+                        <button class="btn btn-secondary btn-small" onclick="nextMonth()">▶</button>
+                    </div>
+                </div>
+                <div class="monthly-table-container" id="monthlyTableContainer">
+                    <!-- Monthly table will be rendered here -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Records Panel (Collapsible) -->
+    <aside class="records-panel" id="recordsPanel">
+        <div class="records-card" id="records">
+            <div class="section-header">
+                <h2 class="section-title">课程记录</h2>
+                <div>
+                    <button class="btn btn-secondary btn-small" onclick="exportData()">📥 导出</button>
+                    <button class="btn btn-secondary btn-small" onclick="clearAll()">🗑️ 清空</button>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <label>日期筛选：</label>
+                <input type="date" id="startDate">
+                <span>至</span>
+                <input type="date" id="endDate">
+                <button class="btn btn-secondary btn-small" onclick="filterByDate()">筛选</button>
+                <button class="btn btn-secondary btn-small" onclick="clearFilter()">清除</button>
+            </div>
+
+            <div class="table-container" id="tableContainer">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <p>暂无记录，请添加课程记录</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Stats Section - Bottom -->
+    <section class="stats-section" id="stats">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <h3>总课时费</h3>
+                <div class="value" id="totalFee">¥0</div>
+            </div>
+            <div class="stat-item">
+                <h3>总教研员计数</h3>
+                <div class="value" id="totalResearch">0</div>
+            </div>
+            <div class="stat-item">
+                <h3>总课次</h3>
+                <div class="value" id="totalClasses">0</div>
+            </div>
+            <div class="stat-item">
+                <h3>记录条数</h3>
+                <div class="value" id="recordCount">0</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Price Modal -->
+    <div class="modal-overlay" id="priceModal" onclick="hidePriceModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>价格表</h3>
+                <button class="modal-close" onclick="hidePriceModal()">&times;</button>
+            </div>
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th>年级</th>
+                        <th>一对一</th>
+                        <th>1V3(1人)</th>
+                        <th>1V3(2人)</th>
+                        <th>1V3(3人)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>6-8年级</td><td>¥160</td><td>¥100</td><td>¥160</td><td>¥220</td></tr>
+                    <tr><td>初三/高一/高二</td><td>¥200</td><td>¥140</td><td>¥200</td><td>¥260</td></tr>
+                    <tr><td>高三</td><td>¥220</td><td>¥160</td><td>¥220</td><td>¥280</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'course_fee_records_v6';
+        const SETTINGS_KEY = 'course_fee_settings_v6';
+
+        const classTypeConfig = {
+            'one-on-one': { name: '一对一', researchCount: 2.5, tagClass: 'tag-one-on-one' },
+            'group-1': { name: '一对三(1人)', researchCount: 1, tagClass: 'tag-group-1' },
+            'group-2': { name: '一对三(2人)', researchCount: 2, tagClass: 'tag-group-2' },
+            'group-3': { name: '一对三(3人)', researchCount: 3, tagClass: 'tag-group-3' }
+        };
+
+        const priceTable = {
+            '6-8': { 'one-on-one': 160, 'group-1': 100, 'group-2': 160, 'group-3': 220 },
+            '初三/高一/高二': { 'one-on-one': 200, 'group-1': 140, 'group-2': 200, 'group-3': 260 },
+            '高三': { 'one-on-one': 220, 'group-1': 160, 'group-2': 220, 'group-3': 280 }
+        };
+
+        const timeSlots = ['7:30-9:30', '9:30-11:30', '12:00-14:00', '14:00-16:00', '16:00-18:00', '18:20-20:20', '20:20-22:20'];
+
+        let allRecords = [], filteredRecords = [];
+        let lastAddedId = null;
+        let currentViewDate = new Date();
+        let recordsPanelVisible = false;
+        let selectedTimeSlot = '', selectedGrade = '', selectedClassType = '';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('date').valueAsDate = new Date();
+            loadFromStorage();
+            loadSettings();
+            updateDisplay();
+            bindEvents();
+            updateMonthlyTable();
+        });
+
+        function bindEvents() {
+            // Count buttons
+            document.querySelectorAll('#countGroup .count-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#countGroup .count-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    document.getElementById('count').value = this.dataset.value;
+                });
+            });
+
+            // Time slot buttons
+            document.querySelectorAll('#timeGroup .opt-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#timeGroup .opt-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedTimeSlot = this.dataset.value;
+                });
+            });
+
+            // Grade buttons
+            document.querySelectorAll('#gradeGroup .opt-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#gradeGroup .opt-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedGrade = this.dataset.value;
+                    updatePrice();
+                    saveSettings();
+                });
+            });
+
+            // Class type buttons
+            document.querySelectorAll('#classTypeGroup .opt-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#classTypeGroup .opt-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedClassType = this.dataset.value;
+                    updatePrice();
+                    saveSettings();
+                });
+            });
+        }
+
+        function toggleRecords() {
+            const panel = document.getElementById('recordsPanel');
+            const icon = document.getElementById('toggleIcon');
+            recordsPanelVisible = !recordsPanelVisible;
+            if (recordsPanelVisible) {
+                panel.classList.add('show');
+                icon.textContent = '✕';
+            } else {
+                panel.classList.remove('show');
+                icon.textContent = '📋';
+            }
+        }
+
+        function showPriceModal() {
+            document.getElementById('priceModal').classList.add('show');
+        }
+
+        function hidePriceModal(event) {
+            if (!event || event.target === document.getElementById('priceModal')) {
+                document.getElementById('priceModal').classList.remove('show');
+            }
+        }
+
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem(SETTINGS_KEY);
+                if (saved) {
+                    const settings = JSON.parse(saved);
+                    if (settings.grade) {
+                        selectedGrade = settings.grade;
+                        document.querySelector(`#gradeGroup .opt-btn[data-value="${settings.grade}"]`)?.classList.add('active');
+                    }
+                    if (settings.classType) {
+                        selectedClassType = settings.classType;
+                        document.querySelector(`#classTypeGroup .opt-btn[data-value="${settings.classType}"]`)?.classList.add('active');
+                    }
+                    updatePrice();
+                }
+            } catch (e) {}
+        }
+
+        function saveSettings() {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify({ grade: selectedGrade, classType: selectedClassType }));
+        }
+
+        function loadFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) allRecords = JSON.parse(saved);
+            } catch (e) { allRecords = []; }
+            filteredRecords = [...allRecords];
+        }
+
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(allRecords));
+        }
+
+        function updatePrice() {
+            const display = document.getElementById('priceDisplay');
+            if (selectedGrade && selectedClassType && priceTable[selectedGrade]) {
+                display.textContent = `¥${priceTable[selectedGrade][selectedClassType]}`;
+            } else {
+                display.textContent = '¥--';
+            }
+        }
+
+        function addRecord() {
+            const date = document.getElementById('date').value;
+            const count = parseFloat(document.getElementById('count').value);
+
+            if (!date) { alert('请选择日期！'); return; }
+            if (!selectedTimeSlot) { alert('请选择时段！'); return; }
+            if (!selectedGrade) { alert('请选择年级！'); return; }
+            if (!selectedClassType) { alert('请选择课时形式！'); return; }
+            if (!count || count <= 0) { alert('请输入有效的课次！'); return; }
+
+            const price = priceTable[selectedGrade][selectedClassType];
+            const config = classTypeConfig[selectedClassType];
+
+            const record = {
+                id: Date.now(),
+                date, timeSlot: selectedTimeSlot, grade: selectedGrade,
+                classType: config.name, classTypeKey: selectedClassType,
+                price, count,
+                researchCount: config.researchCount * count,
+                totalFee: price * count
+            };
+
+            lastAddedId = record.id;
+            allRecords.push(record);
+            saveToStorage();
+            filteredRecords = [...allRecords];
+            updateDisplay();
+            updateMonthlyTable();
+            clearForm();
+        }
+
+        function clearForm() {
+            document.getElementById('date').valueAsDate = new Date();
+            document.getElementById('count').value = '1';
+            document.querySelectorAll('#timeGroup .opt-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#countGroup .count-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('#countGroup .count-btn[data-value="1"]')?.classList.add('active');
+            selectedTimeSlot = '';
+        }
+
+        function deleteRecord(id) {
+            if (!confirm('确定删除这条记录？')) return;
+            allRecords = allRecords.filter(r => r.id !== id);
+            filteredRecords = filteredRecords.filter(r => r.id !== id);
+            saveToStorage();
+            updateDisplay();
+            updateMonthlyTable();
+        }
+
+        function clearAll() {
+            if (allRecords.length === 0) return;
+            if (!confirm('确定清空所有记录？此操作不可恢复！')) return;
+            allRecords = []; filteredRecords = [];
+            saveToStorage();
+            updateDisplay();
+            updateMonthlyTable();
+        }
+
+        function filterByDate() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            if (!startDate && !endDate) {
+                filteredRecords = [...allRecords];
+            } else {
+                filteredRecords = allRecords.filter(r => {
+                    if (startDate && r.date < startDate) return false;
+                    if (endDate && r.date > endDate) return false;
+                    return true;
+                });
+            }
+            updateDisplay();
+        }
+
+        function clearFilter() {
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            filteredRecords = [...allRecords];
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            updateTable();
+            updateSummary();
+        }
+
+        function updateTable() {
+            const container = document.getElementById('tableContainer');
+            if (filteredRecords.length === 0) {
+                container.innerHTML = `<div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <p>暂无记录，请添加课程记录</p>
+                </div>`;
+                return;
+            }
+
+            const sortedRecords = [...filteredRecords].sort((a, b) => {
+                if (a.date !== b.date) return b.date.localeCompare(a.date);
+                return timeSlots.indexOf(a.timeSlot) - timeSlots.indexOf(b.timeSlot);
+            });
+
+            container.innerHTML = `<table>
+                <thead><tr>
+                    <th>#</th><th>日期</th><th>时段</th><th>年级</th><th>形式</th>
+                    <th>单价</th><th>课次</th><th>教研</th><th>课时费</th><th></th>
+                </tr></thead>
+                <tbody>
+                    ${sortedRecords.map((r, i) => `<tr class="${r.id === lastAddedId ? 'new-row' : ''}">
+                        <td>${i + 1}</td>
+                        <td>${r.date}</td>
+                        <td>${r.timeSlot}</td>
+                        <td>${r.grade}</td>
+                        <td><span class="tag ${classTypeConfig[r.classTypeKey].tagClass}">${r.classType}</span></td>
+                        <td>¥${r.price}</td>
+                        <td>${r.count}</td>
+                        <td>${r.researchCount}</td>
+                        <td>¥${r.totalFee}</td>
+                        <td><button class="btn-text" onclick="deleteRecord(${r.id})">删除</button></td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>`;
+
+            if (lastAddedId) {
+                setTimeout(() => {
+                    const newRow = container.querySelector('.new-row');
+                    if (newRow) newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    lastAddedId = null;
+                }, 100);
+            }
+        }
+
+        function updateSummary() {
+            const totalFee = filteredRecords.reduce((sum, r) => sum + r.totalFee, 0);
+            const totalResearch = filteredRecords.reduce((sum, r) => sum + r.researchCount, 0);
+            const totalClasses = filteredRecords.reduce((sum, r) => sum + r.count, 0);
+            document.getElementById('totalFee').textContent = `¥${totalFee}`;
+            document.getElementById('totalResearch').textContent = totalResearch.toFixed(1);
+            document.getElementById('totalClasses').textContent = totalClasses;
+            document.getElementById('recordCount').textContent = filteredRecords.length;
+        }
+
+        function exportData() {
+            if (filteredRecords.length === 0) { alert('没有数据可导出！'); return; }
+            const sortedRecords = [...filteredRecords].sort((a, b) => {
+                if (a.date !== b.date) return a.date.localeCompare(b.date);
+                return timeSlots.indexOf(a.timeSlot) - timeSlots.indexOf(b.timeSlot);
+            });
+            const headers = ['序号', '日期', '时段', '年级', '课时形式', '单价', '课次', '教研员计数', '课时费'];
+            const rows = sortedRecords.map((r, i) => [i + 1, r.date, r.timeSlot, r.grade, r.classType, r.price, r.count, r.researchCount, r.totalFee]);
+            const totalFee = filteredRecords.reduce((sum, r) => sum + r.totalFee, 0);
+            const totalResearch = filteredRecords.reduce((sum, r) => sum + r.researchCount, 0);
+            const totalClasses = filteredRecords.reduce((sum, r) => sum + r.count, 0);
+            rows.push(['', '', '', '合计', '', '', totalClasses, totalResearch, totalFee]);
+            const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+            const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `课时费统计_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // Monthly Overview Functions
+        function prevMonth() {
+            currentViewDate.setMonth(currentViewDate.getMonth() - 1);
+            updateMonthlyTable();
+        }
+
+        function nextMonth() {
+            currentViewDate.setMonth(currentViewDate.getMonth() + 1);
+            updateMonthlyTable();
+        }
+
+        function updateMonthlyTable() {
+            const year = currentViewDate.getFullYear();
+            const month = currentViewDate.getMonth();
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+
+            // Update month display
+            document.getElementById('currentMonth').textContent = `${year}年${month + 1}月`;
+
+            // Get days in month
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // Filter records for this month
+            const monthRecords = allRecords.filter(r => {
+                const recordDate = new Date(r.date);
+                return recordDate.getFullYear() === year && recordDate.getMonth() === month;
+            });
+
+            // Build table - Horizontal layout (time slots as rows, days as columns)
+            const timeSlotLabels = ['7:30', '9:30', '12:00', '14:00', '16:00', '18:20', '20:20'];
+
+            // Header row with dates
+            let html = '<table class="monthly-table"><thead><tr><th>时段</th>';
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayOfWeek = new Date(year, month, day).getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                const isToday = dateStr === todayStr;
+
+                let thClass = '';
+                if (isToday) thClass = 'today';
+                else if (isWeekend) thClass = 'weekend';
+
+                const weekDay = ['日', '一', '二', '三', '四', '五', '六'][dayOfWeek];
+                html += `<th class="${thClass}">${day}<br><small>${weekDay}</small></th>`;
+            }
+            html += '<th class="total-col">合计</th></tr></thead><tbody>';
+
+            // Data rows - one per time slot
+            const columnTotals = new Array(daysInMonth).fill(0);
+            let grandTotal = 0;
+
+            timeSlots.forEach((slot, slotIndex) => {
+                html += `<tr><td>${timeSlotLabels[slotIndex]}</td>`;
+
+                let rowTotal = 0;
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const dayOfWeek = new Date(year, month, day).getDay();
+                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                    const isToday = dateStr === todayStr;
+
+                    let tdClass = '';
+                    if (isToday) tdClass = 'today';
+                    else if (isWeekend) tdClass = 'weekend';
+
+                    const record = monthRecords.find(r => r.date === dateStr && r.timeSlot === slot);
+                    if (record) {
+                        html += `<td class="has-data ${tdClass}">¥${record.totalFee}</td>`;
+                        rowTotal += record.totalFee;
+                        columnTotals[day - 1] += record.totalFee;
+                    } else {
+                        html += `<td class="${tdClass}">-</td>`;
+                    }
+                }
+
+                grandTotal += rowTotal;
+                html += `<td class="has-data">${rowTotal > 0 ? '¥' + rowTotal : '-'}</td></tr>`;
+            });
+
+            // Total row
+            html += '<tr class="total-row"><td>合计</td>';
+            for (let day = 0; day < daysInMonth; day++) {
+                html += `<td>${columnTotals[day] > 0 ? '¥' + columnTotals[day] : '-'}</td>`;
+            }
+            html += `<td>¥${grandTotal}</td></tr>`;
+            html += '</tbody></table>';
+
+            document.getElementById('monthlyTableContainer').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
